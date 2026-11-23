@@ -117,7 +117,7 @@ public class AArcanaEnchantingMenu extends AbstractContainerMenu {
                                     default -> 1;
                                 };
                                 i += enchantInstance.getValue() * rarityMultiplier;
-                                if ((enchantInstance.getKey().isTreasureOnly() || AscendantArcana.config.books_remove_scrap_cost || AscendantArcana.config.books_tier_bypass != 0) && !unlockedTreasures.contains(enchantInstance.getKey())) {
+                                if ((enchantInstance.getKey() || AscendantArcana.config.books_remove_scrap_cost || AscendantArcana.config.books_tier_bypass != 0) && !unlockedTreasures.contains(enchantInstance.getKey())) {
                                     unlockedTreasures.add(enchantInstance.getKey());
                                 }
                             }
