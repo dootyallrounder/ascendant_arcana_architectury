@@ -69,8 +69,11 @@ public class ServerConfig implements ConfigData {
     @Comment("If single_enchantment_books is true, setting this option to true will destroy extra enchantments on books.")
     public boolean update_old_books = false;
 
-    @Comment("Enchanted Books placed in Chiseled Bookshelves near an Enchanting Table will remove the scrap cost for that enchantment.")
-    public boolean books_remove_scrap_cost = false;
+    @Comment("Enchanted Books placed in Chiseled Bookshelves near an Enchanting Table will remove the cost for that enchantment.")
+    public boolean books_remove_ingredient_cost = false;
+
+    @Comment("If books_remove_ingredient_cost is true, setting this option to true will allow treasure enchantments to have their enchanting cost removed as well.")
+    public boolean treasure_remove_cost = false;
 
     @Comment("""
             The amount of tiers having an Enchanted Book in a Chiseled Bookshelf bypasses.
@@ -192,7 +195,8 @@ public class ServerConfig implements ConfigData {
         buf.writeInt(very_rare_enchanting_power);
         buf.writeBoolean(single_enchantment_books);
         buf.writeBoolean(update_old_books);
-        buf.writeBoolean(books_remove_scrap_cost);
+        buf.writeBoolean(books_remove_ingredient_cost);
+        buf.writeBoolean(treasure_remove_cost);
         buf.writeInt(books_tier_bypass);
         buf.writeInt(bookshelf_detection_width);
         buf.writeInt(bookshelf_detection_height);
@@ -222,7 +226,8 @@ public class ServerConfig implements ConfigData {
                 && very_rare_enchanting_power == buf.readInt()
                 && single_enchantment_books == buf.readBoolean()
                 && update_old_books == buf.readBoolean()
-                && books_remove_scrap_cost == buf.readBoolean()
+                && books_remove_ingredient_cost == buf.readBoolean()
+                && treasure_remove_cost == buf.readBoolean()
                 && books_tier_bypass == buf.readInt()
                 && bookshelf_detection_width == buf.readInt()
                 && bookshelf_detection_height == buf.readInt()
