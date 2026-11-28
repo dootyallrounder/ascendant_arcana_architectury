@@ -117,7 +117,7 @@ public class AArcanaEnchantingMenu extends AbstractContainerMenu {
                                     default -> 1;
                                 };
                                 i += enchantInstance.getValue() * rarityMultiplier;
-                                if ((enchantInstance.getKey() || AscendantArcana.config.books_remove_scrap_cost || AscendantArcana.config.books_tier_bypass != 0) && !unlockedTreasures.contains(enchantInstance.getKey())) {
+                                if ((enchantInstance.getKey().isTreasureOnly() || AscendantArcana.config.books_tier_bypass != 0 || AscendantArcana.config.books_remove_ingredient_cost || AscendantArcana.config.treasure_remove_cost) && !unlockedTreasures.contains(enchantInstance.getKey())) {
                                     unlockedTreasures.add(enchantInstance.getKey());
                                 }
                             }
@@ -186,7 +186,7 @@ public class AArcanaEnchantingMenu extends AbstractContainerMenu {
         if (itemStack.is(Items.ENCHANTED_BOOK)) itemEnchants = EnchantmentHelper.deserializeEnchantments(EnchantedBookItem.getEnchantments(itemStack));
         else itemEnchants = EnchantmentHelper.getEnchantments(itemStack);
         EnchantmentRecipe.EnchantmentLevelRecipe levelRecipe;
-        if (itemEnchants.containsKey(recipe.enchantment)) {
+        if (itemEnchants.containsKey((recipe.enchantment))) {
             int appliedLevel = itemEnchants.get(recipe.enchantment);
             if (recipe.getLevels().size() > appliedLevel) levelRecipe = recipe.getLevels().get(appliedLevel);
             else levelRecipe = recipe.getLevels().get(recipe.getLevels().size() - 1);
@@ -199,13 +199,13 @@ public class AArcanaEnchantingMenu extends AbstractContainerMenu {
         // Verifying
         if (!AscendantArcana.config.disable_xp && AscendantArcana.config.recipes_use_xp && levelRecipe.levelCost() > player.experienceLevel) return false;
         if (!AArcanaEnchantmentHelper.testEnchantmentCost(itemStack, AArcanaEnchantmentHelper.getEnchantmentCost(recipe.enchantment))) return false;
-        if ((!AscendantArcana.config.books_remove_scrap_cost || !unlockedTreasures.contains(recipe.enchantment)) && levelRecipe.scrapStack() != null) {
-            if (!levelRecipe.scrapStack().test(scrapStack)) return false;
+        if ((!AscendantArcana.config.books_remove_ingredient_cost || !unlockedTreasures.contains(recipe.enchantment) || (!recipe.enchantment.isTreasureOnly() && AscendantArcana.config.treasure_remove_cost)) && levelRecipe.scrapStack() != null){
+                if (!levelRecipe.scrapStack().test(scrapStack)) return false;
         }
-        if (levelRecipe.primaryIngredientStack() != null) {
+        if ((!AscendantArcana.config.books_remove_ingredient_cost || !unlockedTreasures.contains(recipe.enchantment) || (!recipe.enchantment.isTreasureOnly() && AscendantArcana.config.treasure_remove_cost)) && levelRecipe.primaryIngredientStack() != null) {
             if (!levelRecipe.primaryIngredientStack().test(primaryStack)) return false;
         }
-        if (levelRecipe.secondaryIngredientStack() != null) {
+        if ((!AscendantArcana.config.books_remove_ingredient_cost || !unlockedTreasures.contains(recipe.enchantment) || (!recipe.enchantment.isTreasureOnly() && AscendantArcana.config.treasure_remove_cost)) && levelRecipe.secondaryIngredientStack() != null) {
             if (!levelRecipe.secondaryIngredientStack().test(secondaryStack)) return false;
         }
         if (itemEnchants.containsKey(recipe.enchantment)) {
@@ -214,23 +214,21 @@ public class AArcanaEnchantingMenu extends AbstractContainerMenu {
 
         context.execute((level, pos) -> {
             player.onEnchantmentPerformed(itemStack, levelRecipe.levelCost());
-            if ((!AscendantArcana.config.books_remove_scrap_cost || !unlockedTreasures.contains(recipe.enchantment)) && levelRecipe.scrapStack() != null)
-                scrapStack.setCount(scrapStack.getCount() - levelRecipe.scrapStack().getCount());
             ItemStack newStack = itemStack;
+            if ((!AscendantArcana.config.books_remove_ingredient_cost || !unlockedTreasures.contains(recipe.enchantment) || (recipe.enchantment.isTreasureOnly() && !AscendantArcana.config.treasure_remove_cost)) && levelRecipe.scrapStack() != null)
+                scrapStack.setCount(scrapStack.getCount() - levelRecipe.scrapStack().getCount());
             if (scrapStack.isEmpty()) {
                 inventory.setItem(1, ItemStack.EMPTY);
             }
-            if (levelRecipe.primaryIngredientStack() != null) {
+            if ((!AscendantArcana.config.books_remove_ingredient_cost || !unlockedTreasures.contains(recipe.enchantment) || (!recipe.enchantment.isTreasureOnly() && AscendantArcana.config.treasure_remove_cost)) && levelRecipe.primaryIngredientStack() != null)
                 primaryStack.setCount(primaryStack.getCount() - levelRecipe.primaryIngredientStack().getCount());
-                if (primaryStack.isEmpty()) {
-                    inventory.setItem(2, ItemStack.EMPTY);
-                }
+            if (primaryStack.isEmpty()) {
+                inventory.setItem(2, ItemStack.EMPTY);
             }
-            if (levelRecipe.secondaryIngredientStack() != null) {
+            if ((!AscendantArcana.config.books_remove_ingredient_cost || !unlockedTreasures.contains(recipe.enchantment) || (!recipe.enchantment.isTreasureOnly() && AscendantArcana.config.treasure_remove_cost)) && levelRecipe.secondaryIngredientStack() != null)
                 secondaryStack.setCount(secondaryStack.getCount() - levelRecipe.secondaryIngredientStack().getCount());
-                if (secondaryStack.isEmpty()) {
-                    inventory.setItem(3, ItemStack.EMPTY);
-                }
+            if (secondaryStack.isEmpty()) {
+                inventory.setItem(3, ItemStack.EMPTY);
             }
             if (itemStack.is(Items.BOOK)) {
                 newStack = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(recipe.enchantment, 1));
