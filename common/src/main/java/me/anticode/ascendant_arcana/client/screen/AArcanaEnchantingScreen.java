@@ -27,7 +27,6 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.joml.Matrix4f;
 
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -263,7 +262,7 @@ public class AArcanaEnchantingScreen extends AbstractContainerScreen<AArcanaEnch
                             context.drawWordWrap(font, Component.translatable("gui.enchanting.item_cost", levelRecipe.scrapStack().getCount(), Component.translatable(levelRecipe.scrapStack().getIngredient().getItems()[0].getDescriptionId())), scaledPanelX + 42, scaledPanelY + 102, 76,scrapColor);
                         }
                         ItemStack primaryItemStack = getMenu().getSlot(2).getItem();
-                        if (levelRecipe.primaryIngredientStack() != null) {
+                        if (!tile.bypassPrimary && levelRecipe.primaryIngredientStack() != null) {
                             int color = 16777215;
                             if (!levelRecipe.primaryIngredientStack().test(primaryItemStack)) {
                                 color = 11141120;
@@ -271,7 +270,7 @@ public class AArcanaEnchantingScreen extends AbstractContainerScreen<AArcanaEnch
                             context.drawWordWrap(font, Component.translatable("gui.enchanting.item_cost", levelRecipe.primaryIngredientStack().getCount(), Component.translatable(levelRecipe.primaryIngredientStack().getIngredient().getItems()[0].getDescriptionId())), scaledPanelX + 42, scaledPanelY + 138, 76, color);
                         }
                         ItemStack secondaryItemStack = getMenu().getSlot(3).getItem();
-                        if (levelRecipe.secondaryIngredientStack() != null) {
+                        if (!tile.bypassSecondary && levelRecipe.secondaryIngredientStack() != null) {
                             int color = 16777215;
                             if (!levelRecipe.secondaryIngredientStack().test(secondaryItemStack)) {
                                 color = 11141120;
@@ -290,10 +289,10 @@ public class AArcanaEnchantingScreen extends AbstractContainerScreen<AArcanaEnch
                         if (levelRecipe.scrapStack() != null && !tile.bypassScrap) {
                             if (!levelRecipe.scrapStack().test(scrapStack)) buttonEnabled = false;
                         }
-                        if (levelRecipe.primaryIngredientStack() != null) {
+                        if (levelRecipe.primaryIngredientStack() != null && !tile.bypassPrimary) {
                             if (!levelRecipe.primaryIngredientStack().test(primaryItemStack)) buttonEnabled = false;
                         }
-                        if (levelRecipe.secondaryIngredientStack() != null) {
+                        if (levelRecipe.secondaryIngredientStack() != null && !tile.bypassSecondary) {
                             if (!levelRecipe.secondaryIngredientStack().test(secondaryItemStack)) buttonEnabled = false;
                         }
 
@@ -351,7 +350,8 @@ public class AArcanaEnchantingScreen extends AbstractContainerScreen<AArcanaEnch
             if (recipe.getLevels().size() > appliedLevel) enchantmentLevelRecipe = recipe.getLevels().get(appliedLevel);
             else enchantmentLevelRecipe = recipe.getLevels().get(recipe.getLevels().size() - 1);
         } else enchantmentLevelRecipe = recipe.getLevels().get(0);
-        EnchantmentTile tile = new EnchantmentTile(recipe, enchantmentLevelRecipe, buttonX, buttonY, i, locked, incompatible, unlocked && AscendantArcana.config.books_remove_scrap_cost);
+        boolean removeCosts = unlocked && AscendantArcana.config.books_remove_ingredient_cost &&(!recipe.enchantment.isTreasureOnly() || AscendantArcana.config.treasure_remove_cost);
+        EnchantmentTile tile = new EnchantmentTile(recipe, enchantmentLevelRecipe, buttonX, buttonY, i, locked, incompatible, removeCosts, removeCosts, removeCosts);
         enchantments.add(tile);
         addRenderableWidget(tile);
     }
@@ -420,13 +420,17 @@ public class AArcanaEnchantingScreen extends AbstractContainerScreen<AArcanaEnch
         protected boolean maxLevel = false;
         protected boolean incompatible = false;
         protected boolean bypassScrap = false;
+        protected boolean bypassPrimary = false;
+        protected boolean bypassSecondary = false;
         private int offset = 0;
 
-        public EnchantmentTile(EnchantmentRecipe recipe, EnchantmentRecipe.EnchantmentLevelRecipe levelRecipe, int x, int y, int i, boolean locked, boolean incompatible, boolean bypassScrap) {
+        public EnchantmentTile(EnchantmentRecipe recipe, EnchantmentRecipe.EnchantmentLevelRecipe levelRecipe, int x, int y, int i, boolean locked, boolean incompatible, boolean bypassScrap, boolean bypassPrimary, boolean bypassSecondary) {
             super(x, y, 0, 27, Component.translatable(recipe.enchantment.getDescriptionId()));
             this.locked = locked;
             this.incompatible = incompatible;
             this.bypassScrap = bypassScrap;
+            this.bypassPrimary = bypassPrimary;
+            this.bypassSecondary = bypassSecondary;
             this.i = i;
             this.recipe = recipe;
             this.levelRecipe = levelRecipe;
@@ -487,13 +491,13 @@ public class AArcanaEnchantingScreen extends AbstractContainerScreen<AArcanaEnch
                     context.renderItem(magicalScraps, itemX, itemY);
                     context.renderItemDecorations(font, magicalScraps, itemX, itemY);
                 }
-                if (levelRecipe.primaryIngredientStack() != null) {
+                if (!bypassPrimary && levelRecipe.primaryIngredientStack() != null) {
                     Item primaryIngredientItem = levelRecipe.primaryIngredientStack().getIngredient().getItems()[0].getItem();
                     ItemStack primaryIngredient = new ItemStack(primaryIngredientItem, levelRecipe.primaryIngredientStack().getCount());
                     context.renderItem(primaryIngredient, itemX + 20, itemY);
                     context.renderItemDecorations(font, primaryIngredient, itemX + 20, itemY);
                 }
-                if (levelRecipe.secondaryIngredientStack() != null) {
+                if (!bypassSecondary && levelRecipe.secondaryIngredientStack() != null) {
                     Item secondaryIngredientItem = levelRecipe.secondaryIngredientStack().getIngredient().getItems()[0].getItem();
                     ItemStack secondaryIngredient = new ItemStack(secondaryIngredientItem, levelRecipe.secondaryIngredientStack().getCount());
                     context.renderItem(secondaryIngredient, itemX + 40, itemY);
